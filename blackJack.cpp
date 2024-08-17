@@ -108,21 +108,21 @@ vector<int> shuffle()
 
 void draw(player& a, vector<int>& b)
 {
-    if (b.empty()){
+    if (b.empty()) {
         deck();
         shuffle();
     }
 
     int c = b.back();
     b.pop_back();
-    
+
     a.hand.push_back(card[c].name);
     a.val += card[c].value;
 }
 
 void displayPlayer(player& a)
 {
-    for (const string& cardName : a.hand){
+    for (const string& cardName : a.hand) {
         cout << cardName << " ";
     }
     cout << endl;
@@ -132,10 +132,10 @@ void displayPlayer(player& a)
 
 bool check(bool a, int val)
 {
-    if (val > 21){
+    if (val > 21) {
         a = true;
     }
-    else{
+    else {
         a = false;
     }
 
@@ -145,13 +145,12 @@ bool check(bool a, int val)
 
 void changeAce(player& a)
 {
-    unordered_set<string> ace = {"sAce", "cAce", "dAce", "hAce"};
-    for (int i=0; i<a.hand.size(); i++){
-        if (ace.count(a.hand[i]) > 0  && a.val > 21){
+    unordered_set<string> ace = { "sAce", "cAce", "dAce", "hAce" };
+    for (int i = 0; i < a.hand.size(); i++)
+    {
+        if (ace.count(a.hand[i]) > 0 && a.val > 21)
+        {
             a.val -= 10;
-        }
-        if (a.val <= 21){
-            break;
         }
     }
 }
@@ -164,100 +163,122 @@ int main()
     deck();
     vector<int> id = shuffle();
 
-
-    id.pop_back(); //burn top card
+    id.pop_back(); // burn top card
     cout << "Top Card Burned" << endl;
     cout << endl;
 
-
-    draw(p, id);
-    draw(d, id);
-    draw(p, id);
-    draw(d, id);
-
-
-    cout << "Dealer's card: " << d.hand[0] << endl;
-    cout << endl; cout << endl;
-
-    cout << "Player: " << endl;
-    displayPlayer(p);
-    bool win = false;
-
-    if (p.val == 21 && d.val != 21){
-        cout << "BlackJack" << endl;
-        cout << "PLAYER WINS" << endl;
-    }
-    else if (p.val == 21 && d.val == 21){
-        cout << "PUSH" << endl;
-    }
-    else if (p.val != 21 && d.val == 21){
-        cout << "Dealer BlackJack" << endl;
-        cout << "DEALER WINS" << endl;
-    }
- 
-
-
-    char hs;
+    bool bet = true;
     bool bust = false;
-
-    cout << endl;
-    cout << "h to hit, s to stand" << endl;
-    cin >> hs;
-    while (hs != 's' && !bust){
-        cout << endl;
+    char hs;
+    do {
         draw(p, id);
+        draw(d, id);
+        draw(p, id);
+        draw(d, id);
+
+        cout << "Dealer's card: " << d.hand[0] << endl;
+        cout << endl;
+        cout << endl;
+
+        cout << "Player: " << endl;
         displayPlayer(p);
-        
-        if (p.val == 21){
-            break;
+        bool win = false;
+
+        if (p.val == 21 && d.val != 21) {
+            cout << "BlackJack" << endl;
+            cout << "PLAYER WINS" << endl;
+            goto skipTo;
         }
-        bust = check(bust, p.val);
-        
-        if (bust){
-            cout << "Bust" << endl;
+        else if (p.val == 21 && d.val == 21) {
+            cout << "PUSH" << endl;
+            goto skipTo;
+        }
+        else if (p.val != 21 && d.val == 21) {
+            cout << "Dealer BlackJack" << endl;
+            cout << "DEALER WINS" << endl;
+            goto skipTo;
+        }
+
+        bust = false;
+
+        cout << endl;
+        cout << "h to hit, s to stand" << endl;
+        cin >> hs;
+
+        while (hs != 's' && !bust) {
+            cout << endl;
+            draw(p, id);
+            displayPlayer(p);
+            changeAce(p);
+
+            if (p.val == 21) {
+                break;
+            }
+            bust = check(bust, p.val);
+
+            if (bust) {
+                cout << "Bust" << endl;
+            }
+            else {
+                cin >> hs;
+                cout << endl;
+            }
+        }
+
+        cout << endl;
+        cout << "Dealer: " << endl;
+        displayPlayer(d);
+
+        if (bust) {
+            cout << "DEALER WINS" << endl;
+            goto skipTo;
+        }
+
+        while (d.val < 17) {
+            cout << endl;
+            draw(d, id);
+            displayPlayer(d);
+            changeAce(d);
+        }
+
+        if (d.val > 21) {
+            cout << "Dealer Bust" << endl;
+        }
+
+        cout << endl;
+        if (p.val > d.val || d.val > 21) {
+            cout << "PLAYER WINS" << endl;
+        }
+        else if (p.val < d.val) {
+            cout << "DEALER WINS" << endl;
         }
         else {
-        cin >> hs;
-        cout << endl;
+            cout << "PUSH" << endl;
         }
 
-    }
-    
-    cout << endl;
-    cout << "Dealer: " << endl;
-    displayPlayer(d);
-  
-    if (bust){
-        cout << "DEALER WINS" << endl;
-        return 0;
-    }
-
-    while(d.val < 17){
+    skipTo:
         cout << endl;
-        draw(d, id);
-        displayPlayer(d);
-    }
+        char chip;
+        cout << "Continue?? " << endl;
+        cin >> chip;
 
-    
-    if (d.val > 21){
-        cout << "Dealer Bust" << endl;
-    }
+        chip == 'y' ? (bet = true) : (bet = false);
 
-    cout << endl;
-    if (p.val > d.val || d.val > 21){
-        cout << "PLAYER WINS" << endl;
-    }
-    else if (p.val < d.val){
-        cout << "DEALER WINS" << endl;
-    }
-    else {
-        cout << "PUSH" << endl;
-    }
+        p.hand.clear();
+        p.val = 0;
+        d.hand.clear();
+        d.val = 0;
 
+        system("CLS");
+    } while (bet == true);
+
+    return 0;
 }
+
 
 /*
 add:
 Split
 Money
+Continue without exit
 */
